@@ -3,3 +3,4 @@ data
 !tests/data/
 saved_files/
 __pycache__
+wandb/

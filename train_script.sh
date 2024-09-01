@@ -1,10 +1,11 @@
 #!/bin/bash
 
 # Step 1: Prepare dataset
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib
 bash dataset/prepare_ljspeech.sh --stage -1 --stop-stage 3
 
 # Define the save directory
-exp_dir=saved_files/version_1
+EXPORT_DIRECTORY=saved_files/version_1
 
 # Variables for AR model training
 MAX_DURATION_AR=80
@@ -57,6 +58,7 @@ START_BATCH_NAR=0
 ACCUMULATE_GRAD_STEPS_NAR=4
 
 # Step 2: Train AR model
+# cp ${EXPORT_DIRECTORY}/best-valid-loss.pt ${EXPORT_DIRECTORY}/epoch-2.pt  # --start-epoch 3=2+1
 python3 bin/trainer.py \
   --max-duration "$MAX_DURATION_AR" \
   --filter-min-duration "$FILTER_MIN_DURATION_AR" \
@@ -80,7 +82,8 @@ python3 bin/trainer.py \
   --num-epochs "$NUM_EPOCHS_AR" \
   --start-epoch "$START_EPOCH_AR" \
   --start-batch "$START_BATCH_AR" \
-  --accumulate-grad-steps "$ACCUMULATE_GRAD_STEPS_AR"
+  --accumulate-grad-steps "$ACCUMULATE_GRAD_STEPS_AR" \
+  --exp-dir ${EXPORT_DIRECTORY}
 
 # Step 3: Train NAR model
 python3 bin/trainer.py \
@@ -106,11 +109,12 @@ python3 bin/trainer.py \
   --num-epochs "$NUM_EPOCHS_NAR" \
   --start-epoch "$START_EPOCH_NAR" \
   --start-batch "$START_BATCH_NAR" \
-  --accumulate-grad-steps "$ACCUMULATE_GRAD_STEPS_NAR" 
+  --accumulate-grad-steps "$ACCUMULATE_GRAD_STEPS_NAR" \
+  --exp-dir ${EXPORT_DIRECTORY}
 
 # Step 4: (optional) Perform inference
 python3 bin/infer.py --output-dir ${exp_dir}/infer/demos \
-    --checkpoint=${exp_dir}/epoch-2.pt \
+    --checkpoint=${EXPORT_DIRECTORY}/epoch-2.pt \
     --text-prompts "KNOT one point one five miles per hour." \
     --audio-prompts dataset/prompts/8463_294825_000043_000000.wav \
     --text "To get up and running quickly just follow the steps below." \

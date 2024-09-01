@@ -61,6 +61,7 @@ from torch import Tensor
 from torch.cuda.amp import GradScaler
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
+import wandb
 
 import sys
 # Add the root directory to sys.path
@@ -108,6 +109,13 @@ def get_parser():
         type=str2bool,
         default=True,
         help="Should various information be logged in tensorboard.",
+    )
+
+    parser.add_argument(
+        "--wandb",
+        type=str2bool,
+        default=False,
+        help="Should various information be logged in wandb.",
     )
 
     parser.add_argument(
@@ -801,6 +809,20 @@ def train_one_epoch(
                         params.batch_idx_train,
                     )
 
+            if wandb.run is not None:    
+                log_dict = {
+                    "train/current_": loss_info,
+                    "train/total_": tot_loss,
+                    "train/learning_rate": cur_lr,
+                }
+
+                # If using mixed precision, log gradient scale
+                if params.dtype in ["float16", "fp16"]:
+                    log_dict["train/grad_scale"] = cur_grad_scale
+
+                # Log the dictionary to W&B
+                wandb.log(log_dict, step=params.batch_idx_train)
+
         if params.batch_idx_train % params.valid_interval == 0:
             # Calculate validation loss in Rank 0
             model.eval()
@@ -823,6 +845,12 @@ def train_one_epoch(
                 valid_info.write_summary(
                     tb_writer, "train/valid_", params.batch_idx_train
                 )
+            
+            if wandb.run is not None:
+                log_dict = {
+                    "train/valid_": valid_info
+                }
+                wandb.log(log_dict, step=params.batch_idx_train)
 
             model.train()
 
@@ -873,7 +901,7 @@ def run(rank, world_size, args):
     setup_logger(f"{params.exp_dir}/log/log-train")
     logging.info("Training started")
 
-    if args.tensorboard and rank == 0:
+    if not args.wandb and args.tensorboard and rank == 0:
         if params.train_stage:
             tb_writer = SummaryWriter(
                 log_dir=f"{params.exp_dir}/tensorboard_stage{params.train_stage}"
@@ -882,6 +910,21 @@ def run(rank, world_size, args):
             tb_writer = SummaryWriter(log_dir=f"{params.exp_dir}/tensorboard")
     else:
         tb_writer = None
+
+    # Initialize W&B logging
+    if args.wandb and rank == 0:
+        # os.environ["WANDB_API_KEY"] = "you can put your API key here"
+        wandb_api_key = os.environ.get('WANDB_API_KEY')
+
+        if params.train_stage:
+            wandb.init(
+                project="valle-debug",
+                config=params  
+            )
+        else:
+            wandb.init(project="valle-debug", name="experiment")
+    else:
+        wandb.init(mode="disabled")  # No logging if not using W&B
 
     device = torch.device("cpu")
     if torch.cuda.is_available():
@@ -1041,6 +1084,11 @@ def run(rank, world_size, args):
 
         if tb_writer is not None:
             tb_writer.add_scalar("train/epoch", epoch, params.batch_idx_train)
+
+        # Log epoch
+        if wandb.run is not None:
+            wandb.log({"train/epoch": epoch}, step=params.batch_idx_train)
+
 
         params.cur_epoch = epoch
 
