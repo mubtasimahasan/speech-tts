@@ -1,0 +1,5 @@
+download/
+data
+!tests/data/
+saved_files/
+__pycache__
