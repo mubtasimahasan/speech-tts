@@ -11,7 +11,7 @@ stop_stage=3
 dl_dir=$PWD/download # dataset download directory, can predownload files here
 
 audio_extractor="speechtokenizer"  # or Encodec
-audio_feats_dir=data/tokenized # directory for saving tokenized feature
+audio_feats_dir=data_lj/tokenized # directory for saving tokenized feature
 
 # Set path where model checkpoint and config file is 
 checkpoint_path='../speech-token-modified/saved_files/combined_0.2_0.8/'
@@ -40,10 +40,10 @@ fi
 if [ $stage -le 1 ] && [ $stop_stage -ge 1 ]; then
   log "Stage 1: Prepare LJSpeech manifest"
   
-  mkdir -p data/manifests
-  if [ ! -e data/manifests/.ljspeech.done ]; then
-    lhotse prepare ljspeech $dl_dir/LJSpeech-1.1 data/manifests
-    touch data/manifests/.ljspeech.done
+  mkdir -p data_lj/manifests
+  if [ ! -e data_lj/manifests/.ljspeech.done ]; then
+    lhotse prepare ljspeech $dl_dir/LJSpeech-1.1 data_lj/manifests
+    touch data_lj/manifests/.ljspeech.done
   fi
 fi
 
@@ -52,19 +52,19 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ]; then
   log "Stage 2: Split LJSpeech"
 
   # 13100 = dev/test/train = 200/200/12500
-  if [ ! -e data/manifests/ljspeech_recordings_test.jsonl.gz ]; then
+  if [ ! -e data_lj/manifests/ljspeech_recordings_test.jsonl.gz ]; then
     for manifest in "recordings" "supervisions";do
-      lhotse subset --last 600 data/manifests/ljspeech_${manifest}_all.jsonl.gz \
-        data/manifests/ljspeech_${manifest}_dev_test.jsonl.gz || exit 1
-      lhotse subset --last 400 data/manifests/ljspeech_${manifest}_dev_test.jsonl.gz \
-        data/manifests/ljspeech_${manifest}_test.jsonl.gz || exit 1
-      lhotse subset --first 200 data/manifests/ljspeech_${manifest}_dev_test.jsonl.gz \
-        data/manifests/ljspeech_${manifest}_dev.jsonl.gz || exit 1
+      lhotse subset --last 600 data_lj/manifests/ljspeech_${manifest}_all.jsonl.gz \
+        data_lj/manifests/ljspeech_${manifest}_dev_test.jsonl.gz || exit 1
+      lhotse subset --last 400 data_lj/manifests/ljspeech_${manifest}_dev_test.jsonl.gz \
+        data_lj/manifests/ljspeech_${manifest}_test.jsonl.gz || exit 1
+      lhotse subset --first 200 data_lj/manifests/ljspeech_${manifest}_dev_test.jsonl.gz \
+        data_lj/manifests/ljspeech_${manifest}_dev.jsonl.gz || exit 1
 
-      lhotse subset --first 12500 data/manifests/ljspeech_${manifest}_all.jsonl.gz \
-        data/manifests/ljspeech_${manifest}_train.jsonl.gz || exit 1
+      lhotse subset --first 12500 data_lj/manifests/ljspeech_${manifest}_all.jsonl.gz \
+        data_lj/manifests/ljspeech_${manifest}_train.jsonl.gz || exit 1
 
-      rm -f data/manifests/ljspeech_${manifest}_dev_test.jsonl.gz
+      rm -f data_lj/manifests/ljspeech_${manifest}_dev_test.jsonl.gz
     done
   fi
 fi
@@ -77,7 +77,7 @@ if [ $stage -le 3 ] && [ $stop_stage -ge 3 ]; then
     python3 bin/tokenizer.py --dataset-parts "train test dev" --prefix "ljspeech" \
         --audio-extractor ${audio_extractor} \
         --batch-duration 400 \
-        --src-dir "data/manifests" \
+        --src-dir "data_lj/manifests" \
         --output-dir "${audio_feats_dir}" \
         --ckpt-dir "${checkpoint_path}"
   fi

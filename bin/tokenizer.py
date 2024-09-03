@@ -252,6 +252,11 @@ def main():
                                 text_tokenizer, text=c.supervisions[0].text
                             )
                             c.supervisions[0].custom = {}
+                        elif args.prefix.startswith("mls"):
+                            phonemes = tokenize_text(
+                                text_tokenizer, text=c.supervisions[0].text
+                            )
+                            c.supervisions[0].custom = {}
                         else:
                             assert args.prefix == "libritts"
                             phonemes = tokenize_text(
@@ -262,6 +267,9 @@ def main():
 
             cuts_filename = f"{prefix}cuts_{partition}.{args.suffix}"
             cut_set.to_file(f"{args.output_dir}/{cuts_filename}")
+
+            assert all(cut.has_features for cut in cut_set)
+            print("All cuts have features.")
 
     if args.text_extractor:
         unique_phonemes = SymbolTable()
