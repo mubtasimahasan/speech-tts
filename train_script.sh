@@ -2,7 +2,7 @@
 
 # Step 1: Prepare dataset
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib
-bash dataset/prepare_mls.sh
+bash dataset/prepare_ljspeech.sh
 
 # Define the save directory
 EXPORT_DIRECTORY=saved_files/version_1

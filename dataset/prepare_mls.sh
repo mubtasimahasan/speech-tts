@@ -16,7 +16,7 @@ audio_extractor="speechtokenizer"  # or Fbank
 audio_feats_dir=data/tokenized
 
 # Set path where model checkpoint and config file is 
-checkpoint_path='../speech-token-modified/saved_files/combined_0.2_0.8/'
+checkpoint_path='../speech-token-modified/saved_files_v1/combined_0.2_0.8/'
 
 . dataset/shared/parse_options.sh || exit 1
 
@@ -51,11 +51,11 @@ if [ $stage -le 0 ] && [ $stop_stage -ge 0 ]; then
   fi
 
   # Extract the downloaded data
-  if [ ! -d $dl_dir/mls ]; then
-    log "Extracting .tar file to $dl_dir/mls"
-    mkdir -p $dl_dir/mls
-    tar -xf "$dl_dir/mls_english.tar.gz" -C "$dl_dir/mls"
-    log "Extraction complete: $dl_dir/mls"
+  if [ ! -d $dl_dir/multils ]; then
+    log "Extracting .tar file to $dl_dir/multils"
+    mkdir -p $dl_dir/multils
+    tar -xf "$dl_dir/mls_english.tar.gz" -C "$dl_dir/multils"
+    log "Extraction complete: $dl_dir/multils"
   else
     log "File was extracted, extraction skipped."
   fi
@@ -65,42 +65,15 @@ fi
 if [ $stage -le 1 ] && [ $stop_stage -ge 1 ]; then
   log "Stage 1: Prepare manifest"
   
-  mkdir -p data/manifests
-  if [ ! -e data/manifests/.mls.done ]; then
-    lhotse prepare mls $dl_dir/mls data/manifests --flac 
-    touch data/manifests/.mls.done
+  mkdir -p data/manifests_v2
+  if [ ! -e data/manifests_v2/.mls.done ]; then
+    lhotse prepare mls $dl_dir/multils data/manifests_v2 --flac --num-jobs 128
+    touch data/manifests_v2/.mls.done
   else
     log "Manifests were prepared, stage skipped."
   fi
 fi
 
-##################
-# if [ $stage -le 2 ] && [ $stop_stage -ge 2 ]; then
-#   log "Stage 2: Split For Debugging"
-
-#   if [ ! -e data/manifests/mls-english_recordings_debug.jsonl.gz ]; then
-#     for manifest in "recordings" "supervisions";do
-#       lhotse subset --first 100 data/manifests/mls-english_${manifest}_train.jsonl.gz \
-#         data/manifests/mls-english_${manifest}_debug.jsonl.gz || exit 1
-#     done
-#   fi
-# fi
-
-# if [ $stage -le 3 ] && [ $stop_stage -ge 3 ]; then
-#   log "Stage 2: Tokenize mls"
-#   mkdir -p ${audio_feats_dir}
-#   if [ ! -e ${audio_feats_dir}/.mls.tokenize.done ]; then
-#     python3 bin/tokenizer.py --dataset-parts "debug" --prefix "mls-english" \
-#         --audio-extractor ${audio_extractor} \
-#         --batch-duration 400 \
-#         --src-dir "data/manifests" \
-#         --output-dir "${audio_feats_dir}" \
-#         --ckpt-dir "${checkpoint_path}"
-#   else
-#     log "Manifests were tokenized, tokenization skipped."
-#   fi
-# fi
-##################
 
 if [ $stage -le 3 ] && [ $stop_stage -ge 3 ]; then
   log "Stage 2: Tokenize mls"

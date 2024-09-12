@@ -1,6 +1,7 @@
 download/
 data
-data_lj
+data_*
+!dataset/
 !tests/data/
 saved_files/
 __pycache__

@@ -55,7 +55,7 @@ audio_extractor="speechtokenizer"  # or Fbank
 audio_feats_dir=data/tokenized
 
 # Set path where model checkpoint and config file is 
-checkpoint_path='../speech-token-modified/saved_files/combined_0.2_0.8/'
+checkpoint_path='../speech-token-modified/saved_files_v1/combined_0.2_0.8/'
 
 . dataset/shared/parse_options.sh || exit 1
 

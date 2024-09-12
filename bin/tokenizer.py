@@ -257,6 +257,10 @@ def main():
                                 text_tokenizer, text=c.supervisions[0].text
                             )
                             c.supervisions[0].custom = {}
+                        elif args.prefix == "libriheavy":
+                            phonemes = tokenize_text(
+                                text_tokenizer, text=c.supervisions[0].custom["texts"][0]
+                            )
                         else:
                             assert args.prefix == "libritts"
                             phonemes = tokenize_text(
