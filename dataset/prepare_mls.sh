@@ -65,10 +65,10 @@ fi
 if [ $stage -le 1 ] && [ $stop_stage -ge 1 ]; then
   log "Stage 1: Prepare manifest"
   
-  mkdir -p data/manifests_v2
-  if [ ! -e data/manifests_v2/.mls.done ]; then
-    lhotse prepare mls $dl_dir/multils data/manifests_v2 --flac --num-jobs 128
-    touch data/manifests_v2/.mls.done
+  mkdir -p data/manifests
+  if [ ! -e data/manifests/.mls.done ]; then
+    lhotse prepare mls $dl_dir/multils data/manifests --flac --num-jobs 40
+    touch data/manifests/.mls.done
   else
     log "Manifests were prepared, stage skipped."
   fi

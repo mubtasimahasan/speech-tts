@@ -6,3 +6,4 @@ data_*
 saved_files/
 __pycache__
 wandb/
+temp.py

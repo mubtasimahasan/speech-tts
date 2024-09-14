@@ -10,7 +10,8 @@ echo "Preparing the Libriheavy dataset..."
 audio_extractor="speechtokenizer"
 audio_feats_dir=data/tokenized
 
-dataset_parts="small medium large dev"  # all
+# dataset_parts="small medium large dev"  # all
+dataset_parts="small medium dev"  # except large
 # dataset_parts="debug"  # for debugging
 
 # Set path where model checkpoint and config file is 

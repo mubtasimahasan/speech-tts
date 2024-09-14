@@ -220,7 +220,7 @@ def main():
                             num_workers=num_jobs,
                             batch_duration=args.batch_duration,
                             collate=False,
-                            overwrite=True,
+                            overwrite=False,
                             storage_type=NumpyHdf5Writer,
                         )
                     else:
